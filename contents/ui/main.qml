@@ -97,7 +97,7 @@ Item {
                             cache: false
                             function reload() {
                                 source = "";
-                                source = "https://codeship.com/projects/" + project + "/status?branch" + model.branch;
+                                source = "https://codeship.com/projects/" + project + "/status?branch=" + model.branch;
                             }
                         }
 
