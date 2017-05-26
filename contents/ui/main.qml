@@ -24,7 +24,7 @@ import QtQuick.Dialogs 1.2
 import QtQuick.Controls.Styles 1.2
 
 Item {
-    
+
     property string title: plasmoid.configuration.title
     property string project: plasmoid.configuration.project
 
@@ -54,7 +54,7 @@ Item {
         font.pointSize : 14
         horizontalAlignment: "AlignHCenter"
     }
-    
+
     ColumnLayout {
         id: grid
         width: parent.width
@@ -101,12 +101,22 @@ Item {
                             }
                         }
 
+                        Label {
+                          id: lastcheck
+                          text: Qt.formatTime(new Date(),"hh:mm")
+                          function reload() {
+                            text: ""
+                            text: Qt.formatTime(new Date(),"hh:mm")
+                          }
+                        }
+
                         Timer {
                             interval: 300000; // 5 minutes
-                            running: true;
+                            running: true
                             repeat: true
                             onTriggered: {
                                 img.reload()
+                                lastcheck.text = Qt.formatTime(new Date(),"hh:mm")
                             }
                         }
                     }
