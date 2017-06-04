@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=CodeShip
+Name=CodeShip Monitor
 Comment=Shows Build Status
 Encoding=UTF-8
 Icon=format-text-code
@@ -7,7 +7,7 @@ ServiceTypes=Plasma/Applet
 Type=Service
 X-KDE-PluginInfo-Author=David Baum
 X-KDE-PluginInfo-Email=david.baum@naraesk.eu
-X-KDE-PluginInfo-Name=codeship
+X-KDE-PluginInfo-Name=eu.naraesk.codeship
 X-KDE-PluginInfo-License=GPL
 X-KDE-PluginInfo-Version=1.0.1
 X-KDE-PluginInfo-Website=https://github.com/naraesk/plasma-codeship

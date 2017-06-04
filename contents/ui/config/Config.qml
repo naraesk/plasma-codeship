@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 by David Baum <david.baum@naraesk.eu>
+ * Copyright (C) 2016-2017 by David Baum <david.baum@naraesk.eu>
  *
  * This file is part of plasma-codeship.
  *
@@ -16,129 +16,230 @@
  * You should have received a copy of the GNU General Public License
  * along with plasma-codeship.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 import QtQuick 2.5
-import QtQuick.Controls 1.3
+import QtQuick.Controls 1.4
 import QtQuick.Layouts 1.1
 import QtQuick.Dialogs 1.2
 
 Item {
-    property alias cfg_title: title.text
-    property alias cfg_project: project.text
     property var cfg_branches: []
-
-    id: root
-    width: parent.width
-    height: parent.height
+    property var cfg_projects: []
+    property alias cfg_changed: projectModel.count
+    property alias cfg_changed2: theModel.count
 
     Component.onCompleted: {
         var list = plasmoid.configuration.branches
         cfg_branches = []
-        for(var i in list) {
-            addBranch( JSON.parse(list[i]) )
+        for (var i in list) {
+            addBranch(JSON.parse(list[i]))
         }
-   }
+
+        list = plasmoid.configuration.projects
+        cfg_projects = []
+        for (i in list) {
+            addProject2(JSON.parse(list[i]))
+        }
+    }
+
+    function addProject2(project) {
+        projectModel.append(project)
+        cfg_projects.push(JSON.stringify(project))
+    }
+
+    function addProject(title, id) {
+        var project = ({
+                           id: id,
+                           text: title
+                       })
+        projectModel.append(project)
+        selectProject.currentIndex = projectModel.count - 1
+        cfg_projects.push(JSON.stringify(project))
+    }
 
     function addBranch(object) {
-        branchModel.append( object )
-        cfg_branches.push( JSON.stringify(object) )
+        theModel.append(object)
+        cfg_branches.push(JSON.stringify(object))
     }
 
     function removeBranch(index) {
-        if(branchModel.count > 0) {
-            branchModel.remove(index)
-            cfg_branches.splice(index,1)
+        if (theModel.count > 0) {
+            theModel.remove(index)
+            cfg_branches.splice(index, 1)
+        }
+    }
+
+    function removeProject(index) {
+        var project = projectModel.get(index)
+        if (projectModel.count > 0) {
+            for (var i = 0; i < theModel.count; i++) {
+                var branch = theModel.get(i)
+                if(branch.project === project.text) {
+                    console.log("yeah, going to delete " + branch.branch + "from " + project.text)
+                    theModel.remove(i)
+                    cfg_branches.splice(i, 1)
+                }
+            }
+            projectModel.remove(index)
+            cfg_projects.splice(index, 1)
         }
     }
 
     ColumnLayout {
         anchors.fill: parent
-        Layout.fillWidth: true
-        GridLayout {
-            id: layout
-            columns: 3
-            rows: 3
+        GroupBox {
             Layout.fillWidth: true
-            width: parent.width
-            Label {
-                text: i18n('Title')
-                Layout.alignment: Qt.AlignRight
-            }
-        
-            TextField {
-                id: title
-                Layout.fillWidth: true
-                Layout.columnSpan: 2
-                placeholderText: qsTr("Enter Title")
-            }
-        
-            Label {
-                text: i18n('Project UUID')
-                Layout.alignment: Qt.AlignRight;
-            }
-        
-            TextField {
-                id: project
-                Layout.fillWidth: true
-                Layout.columnSpan: 2
-                placeholderText: qsTr("Enter project UUID")
-            }
+            GridLayout {
+                columns: 2
+                rows: 3
+                width: parent.width
+                Label {
+                    text: qsTr('Title')
+                    Layout.alignment: Qt.AlignRight
+                }
 
-            Label {
-                text: i18n('Branch name')
-                Layout.alignment: Qt.AlignRight
-            }
+                TextField {
+                    id: projectTitle
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("Enter title")
+                }
 
-            TextField {
-                id: name
-                Layout.fillWidth: true
-                placeholderText: "branch name"
-            }
+                Label {
+                    id: label
+                    text: i18n('Project UUID')
+                    Layout.alignment: Qt.AlignRight
+                }
 
-            Button {
-                iconName: "list-add"
-                onClicked: {
-                    var object = ({'branch': name.text})
-                    addBranch(object)
-                    name.text = ""
+                TextField {
+                    id: projectID
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("Enter project UUID")
+                }
+
+                Button {
+                    text: qsTr("Add Project")
+                    iconName: "list-add"
+                    Layout.columnSpan: 2
+                    Layout.alignment: Qt.AlignRight
+                    onClicked: {
+                        addProject(projectTitle.text, projectID.text)
+                        projectTitle.text = ""
+                        projectID.text = ""
+                    }
                 }
             }
-       }
+        }
 
-        ColumnLayout {
-            width: parent.width
-            height: parent.height
+        GroupBox {
+            Layout.fillWidth: true
+            GridLayout {
+                width: parent.width
+                columns: 2
+                rows: 3
 
-            ListModel {
-                id: branchModel
+                Label {
+                    text: qsTr('Project')
+                    Layout.alignment: Qt.AlignRight
+                }
+
+                ComboBox {
+                    id: selectProject
+                    model: projectModel
+                    textRole: "text"
+                    onModelChanged: {
+                        selectProject.update()
+                    }
+                }
+
+                Label {
+                    text: qsTr('Branch name')
+                    Layout.alignment: Qt.AlignRight
+                }
+
+                TextField {
+                    id: name
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("Enter branch name")
+                }
+
+                RowLayout {
+                    Layout.alignment: Qt.AlignRight
+                    Layout.columnSpan: 2
+
+                    Button {
+                        text: qsTr("Add Branch")
+                        iconName: "list-add"
+                        onClicked: {
+
+                            var object = ({
+                                              branch: name.text,
+                                              project: selectProject.currentText
+                                          })
+                            addBranch(object)
+                            name.text = ""
+                        }
+                    }
+
+                    Button {
+                        text: qsTr("Remove Project")
+                        iconName: "list-remove"
+
+                        Layout.alignment: Qt.AlignRight
+                        onClicked: {
+                            removeProject(selectProject.currentIndex)
+                        }
+                    }
+                }
+            }
+        }
+        ListModel {
+            id: theModel
+        }
+
+        ListModel {
+            id: projectModel
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            Component {
+                id: sectionHeading
+                Text {
+                    text: qsTr("Project: ") + section
+                    font.bold: true
+                    font.pixelSize: 20
+                    color: label.color
+                }
             }
 
-            RowLayout {
+            ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                frameVisible: true
 
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                ListView {
+                    model: theModel
+                    id: listView
 
-                    frameVisible: true
+                    section.property: "project"
+                    section.criteria: ViewSection.FullString
+                    section.delegate: sectionHeading
 
-                    ListView {
+                    delegate: GridLayout {
+                        columns: 2
                         width: parent.width
-                        model: branchModel
 
-                        delegate: RowLayout {
-                            width: parent.width
+                        Label {
+                            Layout.fillWidth: true
+                            text: model.branch
+                        }
 
-                            Label {
-                                Layout.fillWidth: true
-                                text: model.branch
-                            }
-
-                            Button {
-                                id: removeBranchButton
-                                iconName: "list-remove"
-                                onClicked: removeBranch(model.index)
+                        Button {
+                            id: removeBranchButtono
+                            iconName: "list-remove"
+                            onClicked: {
+                                removeBranch(model.index)
                             }
                         }
                     }
@@ -146,4 +247,4 @@ Item {
             }
         }
     }
-} 
+}
